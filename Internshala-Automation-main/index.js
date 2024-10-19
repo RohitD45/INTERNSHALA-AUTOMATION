@@ -2,6 +2,8 @@ const pup = require("puppeteer");
 let { id, pass } = require("./secret");
 let tab;
 let dataFile = require("./data");
+const pdf = require('pdf-parse');
+const path = require('../Resume/Resume.pdf');
 
 async function main() {
 
@@ -40,11 +42,28 @@ async function main() {
     await new Promise(function (resolve, reject) {
         return setTimeout(resolve, 2000);
     });
-    await tab.waitForSelector("#cover_letter", { visible: true });
-    await tab.focus("textarea");
-    await tab.type(".ql-editor ql-blank focus-visible", dataFile[0].cover_letter);
+    // await tab.waitForSelector("#cover_letter", { visible: true });
+    // await tab.focus("textarea");
+    // await tab.type(".ql-editor ql-blank focus-visible", dataFile[0].cover_letter);
     
- 
+     await tab.waitForSelector('.ql-editor');
+
+    // Fill in the cover letter in the contenteditable div
+    // const coverLetter = "Sir, I am a big fan of your work. I want to work with your organization and I want to expand my knowledge.";
+    const coverLetter = dataFile[0].cover_letter;
+
+    await tab.evaluate((coverLetter) => {
+        const editor = document.querySelector('.ql-editor');
+        editor.innerHTML = coverLetter;
+    }, coverLetter);
+
+    const resumePath = path.resolve(__dirname, '../Resume/Resume.pdf');
+            // Upload the file
+            const input = await tab.$('input[name="custom_resume"]');
+            await input.uploadFile(pdfPath); // Use the correct path to upload the PDF file
+
+    
+   
     
 
     // await tab.waitForSelector("#graduation-tab .ic-16-plus", { visible: true });
