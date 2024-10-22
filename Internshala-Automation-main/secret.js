@@ -1,3 +1,3 @@
-let id = "yp5253522@gmail.com";
-let pass = "Yash262692";
+let id = "Enter your own id";
+let pass = "Enter your own password";
 module.exports = { id, pass };
