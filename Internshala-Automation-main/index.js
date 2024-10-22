@@ -2,11 +2,10 @@ const pup = require("puppeteer");
 let { id, pass } = require("./secret");
 let tab;
 let dataFile = require("./data");
-const pdf = require('pdf-parse');
-const path = require('../Resume/Resume.pdf');
+const path = require('path');  // Correctly require the path module
+const resumePath = path.resolve('C:/Users/bhagv/Downloads/Internshala-Automation-main/Resume/Resume.pdf');  // Correctly resolve path
 
 async function main() {
-
     let browser = await pup.launch({
         headless: false,
         defaultViewport: false,
@@ -22,66 +21,42 @@ async function main() {
     await tab.type("#modal_password", pass);
     await tab.click("#modal_login_submit");
     await tab.waitForNavigation({ waitUntil: "networkidle2" });
+
     await tab.click(".nav-link.dropdown-toggle.internship_link .is_icon_header.ic-24-filled-down-arrow");
     await tab.goto("https://internshala.com/internships/matching-preferences/");
 
     let profile_options = await tab.$$("#internship_list_container_1 div");
-    // for (let i = 0; i < 11; i++) {
-        let url = await tab.evaluate(function (ele) {
-            return ele.getAttribute("data-href");
-        }, profile_options[0]);
-        await tab.goto("https://internshala.com" + url);
-        await tab.click(".buttons_container");
-        await new Promise(function (resolve, reject) {
-            return setTimeout(resolve, 2000);
-        });
-        await tab.click(".proceed-btn-container");
-        await tab.click(".proceed-btn-container button");
-    // }
-   
-    await new Promise(function (resolve, reject) {
-        return setTimeout(resolve, 2000);
-    });
-    // await tab.waitForSelector("#cover_letter", { visible: true });
-    // await tab.focus("textarea");
-    // await tab.type(".ql-editor ql-blank focus-visible", dataFile[0].cover_letter);
     
-     await tab.waitForSelector('.ql-editor');
+    let url = await tab.evaluate(function (ele) {
+        return ele.getAttribute("data-href");
+    }, profile_options[0]);
+    
+    await tab.goto("https://internshala.com" + url);
+    await tab.click(".buttons_container");
 
-    // Fill in the cover letter in the contenteditable div
-    // const coverLetter = "Sir, I am a big fan of your work. I want to work with your organization and I want to expand my knowledge.";
-    const coverLetter = dataFile[0].cover_letter;
+    await tab.waitForSelector(".proceed-btn-container", { visible: true });
+    await tab.click(".proceed-btn-container button");
+    
+    await tab.waitForSelector('.ql-editor');
 
+    const coverLetter = dataFile[0].cover_letter;  // Use cover letter from dataFile
     await tab.evaluate((coverLetter) => {
         const editor = document.querySelector('.ql-editor');
         editor.innerHTML = coverLetter;
     }, coverLetter);
 
-    const resumePath = path.resolve(__dirname, '../Resume/Resume.pdf');
-            // Upload the file
-            const input = await tab.$('input[name="custom_resume"]');
-            await input.uploadFile(pdfPath); // Use the correct path to upload the PDF file
-
+    // Wait for the resume upload section
+    const fileInputSelector = '#custom_resume';
+    await tab.waitForSelector(fileInputSelector);
     
-   
+    // Upload the resume file
+    const inputElement = await tab.$(fileInputSelector);
+    await inputElement.uploadFile(resumePath);  // Upload resume using the correct path
     
-
-    // await tab.waitForSelector("#graduation-tab .ic-16-plus", { visible: true });
-    // await tab.click("#graduation-tab .ic-16-plus");
-    // await graduation(dataFile[0]);
-
-    await new Promise(function (resolve, reject) {
-        return setTimeout(resolve, 1000);
-    });
-
     await tab.waitForSelector(".next-button", { visible: true });
     await tab.click(".next-button");
 
     await training(dataFile[0]);
-
-    await new Promise(function (resolve, reject) {
-        return setTimeout(resolve, 1000);
-    });
 
     await tab.waitForSelector(".next-button", { visible: true });
     await tab.click(".next-button");
@@ -91,104 +66,36 @@ async function main() {
 
     await workSample(dataFile[0]);
 
-    await new Promise(function (resolve, reject) {
-        return setTimeout(resolve, 1000);
-    });
-
     await tab.waitForSelector("#save_work_samples", { visible: true });
     await tab.click("#save_work_samples");
 
-    // await tab.waitForSelector(".resume_download_mobile", {visible : true});
-    // await tab.click(".resume_download_mobile");                                // if you want to download resume.
- 
     await new Promise(function (resolve, reject) {
         return setTimeout(resolve, 1000);
     });
-     
+
     await application(dataFile[0]);
-    
 }
 
 async function graduation(data) {
     await tab.waitForSelector("#degree_completion_status_pursuing", { visible: true });
     await tab.click("#degree_completion_status_pursuing");
 
-    await tab.waitForSelector("#college", { visible: true });
     await tab.type("#college", data["College"]);
-
-    await tab.waitForSelector("#start_year_chosen", { visible: true });
-    await tab.click("#start_year_chosen");
-    await tab.waitForSelector(".active-result[data-option-array-index='5']", { visible: true });
-    await tab.click(".active-result[data-option-array-index='5']");
-
-    await tab.waitForSelector("#end_year_chosen", { visible: true });
-    await tab.click('#end_year_chosen');
-    await tab.waitForSelector("#end_year_chosen .active-result[data-option-array-index = '6']", { visible: true });
-    await tab.click("#end_year_chosen .active-result[data-option-array-index = '6']");
-
-    await tab.waitForSelector("#degree", { visible: true });
     await tab.type("#degree", data["Degree"]);
-
-    await new Promise(function (resolve, reject) {
-        return setTimeout(resolve, 1000);
-    });
-    await tab.waitForSelector("#stream", { visible: true });
     await tab.type("#stream", data["Stream"]);
-
-    await new Promise(function (resolve, reject) {
-        return setTimeout(resolve, 1000);
-    });
-    await tab.waitForSelector("#performance-college", { visible: true });
     await tab.type("#performance-college", data["Percentage"]);
 
-    await new Promise(function (resolve, reject) {
-        return setTimeout(resolve, 1000);
-    });
-
     await tab.click("#college-submit");
-
 }
 
 async function training(data) {
     await tab.waitForSelector(".experiences-tabs[data-target='#training-modal'] .ic-16-plus", { visible: true });
     await tab.click(".experiences-tabs[data-target='#training-modal'] .ic-16-plus");
 
-    await tab.waitForSelector("#other_experiences_course", { visible: true });
     await tab.type("#other_experiences_course", data["Training"]);
-
-    await new Promise(function (resolve, reject) {
-        return setTimeout(resolve, 1000);
-    });
-
-    await tab.waitForSelector("#other_experiences_organization", { visible: true });
     await tab.type("#other_experiences_organization", data["Organization"]);
 
-    await new Promise(function (resolve, reject) {
-        return setTimeout(resolve, 1000);
-    });
-
-    await tab.click("#other_experiences_location_type_label");
-
-    await tab.click("#other_experiences_start_date");
-
-    await new Promise(function (resolve, reject) {
-        return setTimeout(resolve, 1000);
-    });
-
-    await tab.waitForSelector(".ui-state-default[href='#']", { visible: true });
-    let date = await tab.$$(".ui-state-default[href='#']");
-    await date[0].click();
-    await tab.click("#other_experiences_is_on_going");
-
-    await tab.waitForSelector("#other_experiences_training_description", { visible: true });
-    await tab.type("#other_experiences_training_description", data["description"]);
-
-    await new Promise(function (resolve, reject) {
-        return setTimeout(resolve, 2000);
-    });
-
     await tab.click("#training-submit");
-
 }
 
 async function workSample(data) {
@@ -197,16 +104,14 @@ async function workSample(data) {
 }
 
 async function application(data) {
-
     await tab.goto("https://internshala.com/the-grand-summer-internship-fair");
-
     await tab.waitForSelector(".btn.btn-primary.campaign-btn.view_internship", { visible: true });
-    await tab.click(".btn.btn-primary.campaign-btn.view_internship")
+    await tab.click(".btn.btn-primary.campaign-btn.view_internship");
 
     await new Promise(function (resolve, reject) {
         return setTimeout(resolve, 2000);
     });
-    await tab.waitForSelector(".view_detail_button", { visible: true });
+
     let details = await tab.$$(".view_detail_button");
     let detailUrl = [];
     for (let i = 0; i < 3; i++) {
@@ -218,48 +123,21 @@ async function application(data) {
 
     for (let i of detailUrl) {
         await apply(i, data);
-        await new Promise(function (resolve, reject) {
-            return setTimeout(resolve, 1000);
-        });
     }
-
 }
 
 async function apply(url, data) {
     await tab.goto("https://internshala.com" + url);
 
-    await tab.waitForSelector(".btn.btn-large", { visible: true });
     await tab.click(".btn.btn-large");
-
-    await tab.waitForSelector("#application_button", { visible: true });
     await tab.click("#application_button");
 
-    await tab.waitForSelector(".textarea.form-control", { visible: true });
     let ans = await tab.$$(".textarea.form-control");
-
-    for (let i = 0; i < ans.length; i++) {
-        if (i == 0) {
-            await ans[i].type(data["hiringReason"]);
-            await new Promise(function (resolve, reject) {
-                return setTimeout(resolve, 1000);
-            });
-        }
-        else if (i == 1) {
-            await ans[i].type(data["availability"]);
-            await new Promise(function (resolve, reject) {
-                return setTimeout(resolve, 1000);
-            });
-        }
-        else {
-            await ans[i].type(data["rating"]);
-            await new Promise(function (resolve, reject) {
-                return setTimeout(resolve, 1000);
-            });
-        }
-    }
+    await ans[0].type(data["hiringReason"]);
+    await ans[1].type(data["availability"]);
+    await ans[2].type(data["rating"]);
 
     await tab.click(".submit_button_container");
-
 }
 
 main();
